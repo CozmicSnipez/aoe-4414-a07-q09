@@ -31,7 +31,6 @@ import sys
 # Constants
 c = 2.99792458e8  # Speed of light in m/s
 
-# Parse script arguments
 if len(sys.argv) == 8:
     tx_w = float(sys.argv[1])       # Transmitter power in watts
     tx_gain_db = float(sys.argv[2]) # Transmitter antenna gain in dB
@@ -46,15 +45,20 @@ if len(sys.argv) == 8:
         print("Error: All input parameters must be positive numbers.")
         exit()
 
-    dist_m = dist_km * 1000
-    fspl_db = 20 * math.log10(dist_m) + 20 * math.log10(freq_hz) - 20 * math.log10(c)
-    pr_db = 10 * math.log10(tx_w) + tx_gain_db - 1 - fspl_db + rx_gain_db
-    pr_w = 10**(pr_db / 10)
-    pn_w = n0_j * bw_hz
-    r_max = bw_hz * math.log2(1 + (pr_w / pn_w))
-
-    print(math.floor(r_max)) # Rounded down to the nearest integer
+    # Calculations
+    Ll = 10**(-1/10)
+    La = 10**(0/10)   
+    lam = c / freq_hz  
+    
+    S = dist_km * 10**3  
+    C = tx_w * Ll * tx_gain_db * (lam / (4 * math.pi * S))**2 * La * rx_gain_db
+    N = n0_j * bw_hz
+    
+    r_max = bw_hz * math.log((1 + C / N), 2)
+    
+    print(math.floor(r_max))
 
 else:
     print("Usage: python3 max_bitrate.py tx_w tx_gain_db freq_hz dist_km rx_gain_db n0_j bw_hz")
     exit()
+
